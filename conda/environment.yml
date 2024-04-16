@@ -1,0 +1,24 @@
+name: okapy
+channels:
+  - conda-forge
+  - radiomics
+dependencies:
+  - python=3.9
+  - pydicom
+  - numpy
+  - scikit-image
+  - scikit-learn
+  - scipy
+  - pyradiomics
+  - SimpleITK
+  - matplotlib
+  - sympy
+  - six
+  - Click
+  - termcolor
+  - pyyaml
+  - pandas
+  - tqdm
+  - pip
+  - pip:
+        - pydicom_seg
