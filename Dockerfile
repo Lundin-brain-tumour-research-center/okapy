@@ -10,6 +10,11 @@ FROM mambaorg/micromamba:1.5.6
 # mambaorg/micromamba defaults to a non-root user. Add a "USER root" to install packages as root:
 USER root
 
+# Add cv2 dependencies (ffmpeg libsm6 libxext6); 'procps' needed by nextflow
+RUN apt-get update && \
+    apt-get install apt-transport-https -y && \
+    apt-get install ffmpeg libsm6 libxext6 procps -y
+
 # Set working directory
 WORKDIR /app
 
@@ -17,10 +22,21 @@ WORKDIR /app
 ARG VERSION=unknown
 RUN echo "${VERSION}" > /app/VERSION
 
-# Add cv2 dependencies (ffmpeg libsm6 libxext6); 'procps' needed by nextflow
-RUN apt-get update && \
-    apt-get install apt-transport-https -y && \
-    apt-get install ffmpeg libsm6 libxext6 procps -y
+
+###############################################################################
+# Create micromamba environment
+###############################################################################
+ENV MAMBA_ROOT_PREFIX=/home/mambauser/mamba_envs
+ENV PYTHONPATH=/app
+
+# Copy conda environment file and install environment with micromamba
+COPY  conda/environment.yml environment.yml
+RUN micromamba install --yes --name base -f environment.yml && \
+    micromamba clean --all --yes
+RUN micromamba config set use_lockfiles False
+
+# Activate micromamba environment
+ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
 ###############################################################################
 # Install code
@@ -38,25 +54,11 @@ COPY README.md ./
 
 # Copy the entrypoint scripts and make it executable
 RUN chmod +x /app/bin/*
+RUN chmod +x /app/tests/*
 
 # Create entrypoint to run executable script in environment
 # -> No entrypoint: import issues, not compatible with nextflow
 #ENTRYPOINT ["micromamba", "run", "-n", "base", "python",  "/app/bin/segmentation_converter.py"]
-
-###############################################################################
-# Create micromamba environment
-###############################################################################
-
-ENV MAMBA_ROOT_PREFIX=/home/mambauser/mamba_envs
-ENV PYTHONPATH=/app
-# Copy conda environment file and install environment with micromamba
-COPY  conda/environment.yml environment.yml
-RUN micromamba install --yes --name base -f environment.yml   && \
-    micromamba clean --all --yes
-RUN micromamba config set use_lockfiles False
-
-# Activate micromamba environment
-ARG MAMBA_DOCKERFILE_ACTIVATE=1
 
 ###############################################################################
 # Container Image Metadata (label schema: http://label-schema.org/rc1/)
