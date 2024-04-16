@@ -165,6 +165,8 @@ class NiftiConverter(BaseConverter):
         self,
         output_folder=".",
         labels_startswith=None,
+        additional_dicom_tags=None,
+        combine_segmentation=False,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -172,7 +174,10 @@ class NiftiConverter(BaseConverter):
         self.study_processor = kwargs.get("study_processor",
                                           SimpleStudyProcessor())
         self.labels_startswith = labels_startswith
-
+        self.dicom_walker.additional_dicom_tags = additional_dicom_tags
+        self._additional_dicom_tags = additional_dicom_tags
+        self._combine_segmentation = False
+        self.combine_segmentation = combine_segmentation
     @staticmethod
     def from_params(params_path):
         if type(params_path) == dict:
@@ -202,6 +207,7 @@ class NiftiConverter(BaseConverter):
             mask_processor=mask_processor,
             padding=params["general"].get("padding", 10),
             combine_segmentation=combine_segmentation,
+            convert_image_without_seg=True
         )
 
         return NiftiConverter(
@@ -211,37 +217,58 @@ class NiftiConverter(BaseConverter):
             combine_segmentation=combine_segmentation,
         )
 
+    # def process_study(self, study, output_folder=None):
+    #     logger.debug(
+    #         f"Start of processing study for patient {study.patient_id}")
+    #     try:
+    #         volumes, masks = self.study_processor(study, labels=self.list_labels)
+    #     except Exception as e:
+    #         logger.error(
+    #             f"Error while processing patient_id {study.patient_id}"
+    #             f" error_message: {e}")
+    #         return {
+    #             "patient_id": study.patient_id,
+    #             "study_id": study.study_instance_uid,
+    #             "error": str(e),
+    #             "status": "failed",
+    #         }
+    #     for volume in volumes:
+    #         volume = self.write(volume, output_folder=output_folder)
+    #
+    #     for mask in masks:
+    #         # mask.reference_modality = volume.modality
+    #         mask = self.write(mask, is_mask=True, output_folder=output_folder)
+    #
+    #     logger.debug(f"Patient {study.patient_id} sucessfully processed")
+    #     return {
+    #         "patient_id": study.patient_id,
+    #         "study_id": study.study_instance_uid,
+    #         "status": "OK",
+    #     }
     def process_study(self, study, output_folder=None):
-        logger.debug(
-            f"Start of processing study for patient {study.patient_id}")
-        try:
-            volumes, masks = self.study_processor(
-                study,
-                labels=self.list_labels,
-                labels_startswith=self.labels_startswith)
-        except Exception as e:
-            logger.error(
-                f"Error while processing patient_id {study.patient_id}"
-                f" error_message: {e}")
-            return {
-                "patient_id": study.patient_id,
-                "study_id": study.study_instance_uid,
-                "error": str(e),
-                "status": "failed",
-            }
-        for volume in volumes:
-            volume = self.write(volume, output_folder=output_folder)
-
-        for mask in masks:
-            # mask.reference_modality = volume.modality
-            mask = self.write(mask, is_mask=True, output_folder=output_folder)
-
-        logger.debug(f"Patient {study.patient_id} sucessfully processed")
-        return {
-            "patient_id": study.patient_id,
-            "study_id": study.study_instance_uid,
-            "status": "OK",
-        }
+        results_df = pd.DataFrame()
+        results_list = []
+        for volume, masks in self.study_processor(study, labels=self.list_labels):
+            volume_info = self.write(volume, output_folder=output_folder)
+            for mask in masks:
+                mask.reference_modality = volume.modality
+                mask_info = self.write(mask,
+                                       is_mask=True,
+                                       output_folder=output_folder)
+                result_dict = {
+                    "patient_id": study.patient_id,
+                    "study_uid"  : study.study_instance_uid,
+                    "study_date" : study.study_date,
+                    "volume_series_uid" : volume.dicom_header.series_instance_uid,
+                    "mask_series_uid" : mask.dicom_header.series_instance_uid,
+                    "modality":        volume_info["modality"],
+                    "VOI":        mask_info["label"],
+                    "p_volume"  : volume_info["path"],
+                    "p_mask"    : mask_info["path"]
+                }
+                results_list.append(pd.Series(result_dict))
+        results_df = pd.concat(results_list, axis=1).T
+        return results_df
 
     def __call__(self, input_folder, output_folder=None):
         if output_folder is not None:
@@ -260,7 +287,9 @@ class NiftiConverter(BaseConverter):
 
         logger.debug(
             f"End of processing studies for {len(studies_list)} studies")
-        return result
+        if len(result)>0:
+            results_df = pd.concat(result)
+        return results_df
 
 
 class ExtractorConverter(BaseConverter):
@@ -284,10 +313,10 @@ class ExtractorConverter(BaseConverter):
 
         from okapy.dicomconverter.converter import ExtractorConverter
 
-        params_path = "path/to/parameters.yaml" 
+        params_path = "path/to/parameters.yaml"
         converter = ExtractorConverter.from_params(params_path)
         results = converter(folder_path)
-    
+
     `results` is a pandas dataframe with the features values for each different images and modalities.
 
     """
@@ -380,6 +409,7 @@ class ExtractorConverter(BaseConverter):
         index = 0
         for volume, masks in self.study_processor(study, labels=labels):
             volume_info = self.write(volume, output_folder=self.output_folder)
+            print(volume_info)
             for mask in masks:
                 mask.reference_modality = volume.modality
                 mask_info = self.write(mask,
