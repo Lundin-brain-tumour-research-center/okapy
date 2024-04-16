@@ -46,6 +46,7 @@ ARG MAMBA_DOCKERFILE_ACTIVATE=1
 COPY okapy ./okapy
 COPY assets ./assets
 COPY bin ./bin
+COPY tests ./tests
 COPY README.md ./
 
 ###############################################################################
