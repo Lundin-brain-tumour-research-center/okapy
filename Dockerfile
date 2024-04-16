@@ -18,9 +18,9 @@ ARG VERSION=unknown
 RUN echo "${VERSION}" > /app/VERSION
 
 # Add cv2 dependencies (ffmpeg libsm6 libxext6); 'procps' needed by nextflow
-#RUN apt-get update && \
-#    apt-get install apt-transport-https -y && \
-#    apt-get install ffmpeg libsm6 libxext6 procps -y
+RUN apt-get update && \
+    apt-get install apt-transport-https -y && \
+    apt-get install ffmpeg libsm6 libxext6 procps -y
 
 ###############################################################################
 # Install code
@@ -71,7 +71,7 @@ LABEL org.label-schema.build-date=${BUILD_DATE} \
     org.label-schema.version=${VERSION} \
     org.label-schema.maintainer="Daniel Abler" \
     org.label-schema.vcs-ref=${VCS_REF} \
-    org.label-schema.vcs-url="https://github.com/danielabler/prediction-modeling.git" \
+    org.label-schema.vcs-url="https://github.com/Lundin-brain-tumour-research-center/okapy.git" \
     org.label-schema.schema-version="1.0" \
     org.label-schema.docker.cmd="TBC" \
     org.label-schema.docker.cmd.test="TBC"
