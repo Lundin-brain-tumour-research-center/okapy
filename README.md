@@ -17,7 +17,18 @@ Configuration of all processes below relies on the OkaPy parameters file for
          --config assets/config_mr.yaml
   ```
 
-- Conversion of Dicom images and segmentations to NII
+- Conversion of Dicom images and segmentations to NII, no preprocessing
+  ```bash
+  python -m bin.converter_dcm_nii \
+         -i data/test_files/dicom/MR/ \
+         -o output/nii/MR5/ \
+         --loglevel debug \
+         -l edema \
+         -s output/nii/MR5/results.json
+  ```
+
+
+- Conversion of Dicom images and segmentations to NII, including preprocessing as for feature extraction
   ```bash
   python -m bin.converter_preprocessor_dcm_nii \
          -i data/test_files/dicom/MR/ \
@@ -81,3 +92,10 @@ docker build . -t okapy
          --config /repo/assets/config_mr.yaml \
          --loglevel debug
   ```
+
+
+  python -m bin.converter_dcm_nii \
+         -i data/test_files/dicom/MR/ \
+         -o output/nii/MR5/ \
+         --loglevel debug \
+         -s output/nii/MR5/results.json
