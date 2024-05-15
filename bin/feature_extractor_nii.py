@@ -5,6 +5,7 @@ from okapy.featureextractor.featureextractor import OkapyExtractors
 import numpy as np
 import logging
 import json
+from okapy.utils import NpEncoder
 
 def extract_features_mask(extractor, path_to_img, path_to_mask, attribute_dict={},
                           modality='MR', p_out=None):
@@ -34,7 +35,8 @@ def extract_features_mask(extractor, path_to_img, path_to_mask, attribute_dict={
             results_df.to_csv(p_out, index=False)
         elif p_out.as_posix().endswith('.json'):
             with open(p_out, 'w') as f:
-                json.dump(results_dict, f, indent=4, sort_keys=True)
+                json.dump(results_dict, f, cls=NpEncoder, indent=4, sort_keys=True)
+
     return results_df, results_dict
 
 

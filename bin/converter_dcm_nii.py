@@ -3,6 +3,7 @@ from okapy.dicomconverter.converter import NiftiConverter
 from okapy.dicomconverter.dicom_walker import DicomWalker
 import json
 import logging
+from okapy.utils import NpEncoder
 
 def convert_dicom_to_nifti(
     input_directory: pl.Path,
@@ -29,7 +30,7 @@ def convert_dicom_to_nifti(
     p_results_info.parent.mkdir(exist_ok=True, parents=True)
 
     with open(p_results_info, "w") as outfile:
-        json.dump(result, outfile)
+        json.dump(result, outfile, cls=NpEncoder, indent=4, sort_keys=True)
 
     logging.info(f"Converted images/masks written to '{output_filepath}', summary of converted files to '{p_results_info}'.")
 
