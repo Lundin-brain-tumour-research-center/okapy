@@ -1,36 +1,7 @@
 import pathlib as pl
-from okapy.dicomconverter.converter import NiftiConverter, ExtractorConverter
+
+from bin.helpers import feature_extractor_dcm
 import logging
-import pandas as pd
-
-def feature_extractor_dcm(
-    input_directory: pl.Path,
-    output_filepath: pl.Path,
-    p_config: pl.Path
-):
-    """
-    Extracts features from all ROIs found in RT-STRUCT/DCM-SEG DCM-series pairs in input_directory.
-    Extraction (including DCM image series preprocess) settings are provided via YAML configuration file.
-    Feature values are saved to output_filepath (csv file).
-    """
-    if p_config.exists():
-        converter = ExtractorConverter.from_params(p_config)
-        results = converter(input_directory)
-        results.to_csv(output_filepath, index=False)
-        logging.info(f"Extraction results were saved to {output_filepath}")
-        return results
-
-    else:
-        logging.fatal(f"Parameter file {p_config} does not exist")
-
-#
-# p_base = pl.Path(__file__).parent.parent
-# p_in = p_base.joinpath("data/test_files/dicom/MR/")
-# p_out = p_base.joinpath("output/nii/features_from_dicom.csv")
-# p_config = p_base.joinpath("assets/config_mr.yaml")
-# result = feature_extractor_dcm(p_in,p_out,p_config)
-
-
 
 if __name__ == "__main__":
 
@@ -90,6 +61,6 @@ if __name__ == "__main__":
         p_config = None
 
     result = feature_extractor_dcm(p_in, p_out,
-                               p_config=p_config)
+                                   p_config=p_config)
     print(result)
 
