@@ -27,6 +27,7 @@ class VolumeProcessorStack():
             if params_stack is None:
                 params_stack = {}
             for name, p in params_stack.items():
+                print(name, p)
                 stacks[key].append(
                     VolumeProcessor.get(name=name)(
                         mask_resampler=mask_resampler, **p))
@@ -86,6 +87,28 @@ class Standardizer(VolumeProcessor, name="standardizer"):
         array = volume.array
         mean = np.mean(array[array > self.threshold])
         std = np.std(array[array > self.threshold])
+        array = (array - mean) / std
+        volume.array = array
+        return volume
+
+
+import SimpleITK as sitk
+class MaskedStandardizerFromFile(VolumeProcessor, name="masked_standardizer_from_file"):
+
+    def __init__(self, *args, mask_label="", mask_resampler=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.mask_label = mask_label
+        if mask_resampler is None:
+            raise TypeError("mask_resampler cannot be None")
+        self.mask_resampler = mask_resampler
+
+    def process(self, volume, mask_files=None, **kwargs):
+        array = volume.array
+        mask_array= self.mask_resampler(self.mask_array, new_reference_frame=volume.reference_frame).array != 0
+        print(f"=== n voxels: {np.sum(mask_array)}")
+        mean = np.mean(array[mask_array])
+        std = np.std(array[mask_array])
+        print(f"==- standaridzation mean={mean}, std={std}")
         array = (array - mean) / std
         volume.array = array
         return volume

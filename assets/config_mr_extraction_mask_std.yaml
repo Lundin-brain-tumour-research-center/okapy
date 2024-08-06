@@ -1,0 +1,42 @@
+general:
+  padding: 10
+  submodalities: True
+  result_format: "long"
+  additional_dicom_tags:
+    - "SeriesInstanceUID"
+    - "SeriesDescription"
+
+volume_preprocessing:
+  common:
+    bspline_resampler:
+      resampling_spacing: [1.0, 1.0, 1.0]
+      order: 1
+  MR_T1c:
+    masked_standardizer_from_file:
+      mask_label: "std_ROI"
+  default:
+
+mask_preprocessing:
+  default:
+    binary_bspline_resampler:
+      order: 0
+
+feature_extraction:
+  MR_T1c:
+    pyradiomics:
+      original:
+        imageType:
+          Original: {}
+        featureClass:
+          shape:
+          firstorder:
+          glcm:
+          glszm:
+          glrlm:
+          ngtdm:
+          gldm:
+
+        setting:
+          binWidth: 0.3
+          voxelArrayShift: 10
+          label: 1
