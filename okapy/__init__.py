@@ -5,7 +5,7 @@ import datetime
 
 __author__ = """Valentin Oreiller"""
 __email__ = 'valentin.oreiller@gmail.com'
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 __container_name__ = ''
 
 
