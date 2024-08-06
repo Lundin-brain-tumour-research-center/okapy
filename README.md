@@ -75,6 +75,24 @@ Configuration of all processes below relies on the OkaPy parameters file for
          -f output/preprocessing-extraction-PETCT/features.json \
          --loglevel debug 
   ```
+
+
+- Image / mask preprocessing and feature extraction from NII, standardization based on mask file
+  (usually used for feature extraction from MRI with mask corresponding to entire brain or WM/GM structure; 
+   example here with CT solely for demonstration purposes):
+
+  ```bash
+  python -m bin.feature_extractor_nii_with_preprocessing \
+         -i output/nii/PETCT/CHUS005/HN-CHUS-005__PT.nii.gz \
+         -m output/nii/PETCT/CHUS005/HN-CHUS-005__GTV__RTSTRUCT__CT.nii.gz \
+         -c assets/config_petct_extraction.yaml \
+         -s PT \
+         -l GTV \
+         -t output/nii/PETCT/CHUS005/HN-CHUS-005__GTV__RTSTRUCT__CT.nii.gz \
+         -d output/preprocessing-extraction-PETCT/ \
+         -f output/preprocessing-extraction-PETCT/features.json \
+         --loglevel debug 
+  ```
   
 
 ### Usage via Docker
@@ -125,6 +143,7 @@ docker build . -t okapy
             --loglevel debug 
   ```
   
+
 - Feature extraction from NII image and mask file (e.g. obtained from the conversion process above)
   ```bash
   docker run --rm \
@@ -154,3 +173,24 @@ docker build . -t okapy
             -f /repo/output/preprocessing-extraction-PETCT/features.json \
             --loglevel debug 
   ```
+
+- Image / mask preprocessing and feature extraction from NII, standardization based on mask file
+  (usually used for feature extraction from MRI with mask corresponding to entire brain or WM/GM structure; 
+   example here with CT solely for demonstration purposes):
+
+  ```bash
+  docker run --rm \
+          -v "<path-to-repository>":"/repo" \
+          okapy:latest \
+          micromamba run -n base   python -m bin.feature_extractor_nii_with_preprocessing \         
+            -i /repo/output/nii/PETCT/CHUS005/HN-CHUS-005__PT.nii.gz \
+            -m /repo/output/nii/PETCT/CHUS005/HN-CHUS-005__GTV__RTSTRUCT__CT.nii.gz \
+            -c /repo/assets/config_petct_extraction.yaml \
+            -s PT \
+            -l GTV \
+            -t /repo/output/nii/PETCT/CHUS005/HN-CHUS-005__GTV__RTSTRUCT__CT.nii.gz \
+            -d /repo/output/preprocessing-extraction-PETCT/ \
+            -f /repo/output/preprocessing-extraction-PETCT/features.json \
+            --loglevel debug
+  ```
+  

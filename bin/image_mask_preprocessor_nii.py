@@ -14,6 +14,10 @@ if __name__ == "__main__":
     parser.add_argument("-m", "--mask",
                         required=True,
                         help="mask file")
+    parser.add_argument("-t", "--stdmask",
+                        required=False,
+                        help="mask file for standardization",
+                        default=None)
     parser.add_argument("-c", "--config",
                         required=True,
                         help="yaml config file")
@@ -77,4 +81,5 @@ if __name__ == "__main__":
     image_mask_preprocessor(p_img, p_mask, p_config,
                             modality=modality,
                             label=args.label,
-                            p_out=args.outdir)
+                            p_out=args.outdir,
+                            path_to_mask_std=args.stdmask)

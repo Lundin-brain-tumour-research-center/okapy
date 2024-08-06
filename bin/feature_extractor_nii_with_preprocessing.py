@@ -14,6 +14,10 @@ if __name__ == "__main__":
     parser.add_argument("-m", "--mask",
                         required=True,
                         help="mask file")
+    parser.add_argument("-t", "--stdmask",
+                        required=False,
+                        help="mask file for standardization",
+                        default=None)
     parser.add_argument("-c", "--config",
                         required=True,
                         help="yaml config file")
@@ -82,4 +86,5 @@ if __name__ == "__main__":
                             modality=modality,
                             label=args.label,
                             p_out_dir=args.outdir,
-                            p_out_features=args.outfile)
+                            p_out_features=args.outfile,
+                            path_to_mask_std=args.stdmask)

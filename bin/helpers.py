@@ -153,6 +153,7 @@ def image_mask_preprocessor(path_to_img: pl.Path,
                                                         mask_resampler=mask_processor)
 
     if path_to_mask_std is not None:
+        path_to_mask_std = pl.Path(path_to_mask_std)
         seg_std_sitk = sitk.ReadImage(path_to_mask_std.as_posix())
         mask_std = get_binary_volume_from_sitk(seg_std_sitk, img_vol, label=label)
         for stack_name, stack in volume_processor.stacks.items():
