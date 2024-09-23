@@ -105,10 +105,9 @@ class MaskedStandardizerFromFile(VolumeProcessor, name="masked_standardizer_from
     def process(self, volume, mask_files=None, **kwargs):
         array = volume.array
         mask_array= self.mask_resampler(self.mask_array, new_reference_frame=volume.reference_frame).array != 0
-        print(f"=== n voxels: {np.sum(mask_array)}")
         mean = np.mean(array[mask_array])
         std = np.std(array[mask_array])
-        print(f"==- standaridzation mean={mean}, std={std}")
+        print(f"  - standardization n_voxels={np.sum(mask_array)}, mean={mean}, std={std}")
         array = (array - mean) / std
         volume.array = array
         return volume

@@ -42,27 +42,31 @@ def get_new_reference_frame(volume, masks_list, padding):
     """
     Function from okapy.dicomconverter.study.StudyProcessor
     """
-    bb_vx = bb_union([
-        project_bb(mask.bb_vx, mask.reference_frame,
-                         volume.reference_frame) for mask in masks_list
-    ])
+    if masks_list is not None:
+        bb_vx = bb_union([
+            project_bb(mask.bb_vx, mask.reference_frame,
+                             volume.reference_frame) for mask in masks_list
+        ])
 
-    bb_vx[:3] = (
-            bb_vx[:3] -
-            np.round(padding / volume.reference_frame.voxel_spacing))
-    bb_vx[3:] = (
-            bb_vx[3:] +
-            np.round(padding / volume.reference_frame.voxel_spacing))
+        bb_vx[:3] = (
+                bb_vx[:3] -
+                np.round(padding / volume.reference_frame.voxel_spacing))
+        bb_vx[3:] = (
+                bb_vx[3:] +
+                np.round(padding / volume.reference_frame.voxel_spacing))
 
-    bb_volume = np.concatenate([[0, 0, 0], volume.reference_frame.shape])
-    bb_vx = bb_intersection([bb_volume, bb_vx])
+        bb_volume = np.concatenate([[0, 0, 0], volume.reference_frame.shape])
+        bb_vx = bb_intersection([bb_volume, bb_vx])
 
-    return ReferenceFrame(
-        origin=volume.reference_frame.vx_to_mm(bb_vx[:3]),
-        orientation_matrix=volume.reference_frame.orientation_matrix,
-        voxel_spacing=volume.reference_frame.voxel_spacing,
-        last_point_coordinate=volume.reference_frame.vx_to_mm(bb_vx[3:]),
-    )
+        return ReferenceFrame(
+            origin=volume.reference_frame.vx_to_mm(bb_vx[:3]),
+            orientation_matrix=volume.reference_frame.orientation_matrix,
+            voxel_spacing=volume.reference_frame.voxel_spacing,
+            last_point_coordinate=volume.reference_frame.vx_to_mm(bb_vx[3:]),
+        )
+    else:
+        logging.warning("No masks provided -> will use volume reference frame")
+        return volume.reference_frame
 
 def get_reference_frame_from_sitk(img_sitk):
     orientation_matrix = np.array(img_sitk.GetDirection()).reshape(3, 3)
@@ -146,16 +150,16 @@ def image_mask_preprocessor(path_to_img: pl.Path,
     img_vol  = get_volume_from_sitk(img_sitk, modality=modality)
     mask_vol = get_binary_volume_from_sitk(seg_sitk, img_vol, label=label)
 
-    masks_list = [mask_vol]
-
     mask_processor = VolumeProcessorStack.from_params(params["mask_preprocessing"])
     volume_processor = VolumeProcessorStack.from_params(params["volume_preprocessing"],
                                                         mask_resampler=mask_processor)
+    masks_list = [mask_vol]
 
     if path_to_mask_std is not None:
         path_to_mask_std = pl.Path(path_to_mask_std)
         seg_std_sitk = sitk.ReadImage(path_to_mask_std.as_posix())
         mask_std = get_binary_volume_from_sitk(seg_std_sitk, img_vol, label=label)
+        masks_list.append(mask_std) # ensure that processed volume not only contains extraction mask, but also standardization mask
         for stack_name, stack in volume_processor.stacks.items():
             for processor in stack:
                 if isinstance(processor, okapy.dicomconverter.volume_processor.MaskedStandardizerFromFile):
